@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\HARDWARE\LED;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\STM32F10x_FWLib\inc;..\CORE;..\HARDWARE\ADC;..\HARDWARE\ADC;..\HARDWARE\DAC;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\SD;..\MALLOC;..\FATFS;..\FATFS\src;..\FATFS\exfuns;..\HARDWARE\FLASH;..\HARDWARE\SPI;..\USMART</IncludePath>
+              <IncludePath>..\HARDWARE\LED;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\STM32F10x_FWLib\inc;..\CORE;..\HARDWARE\ADC;..\HARDWARE\ADC;..\HARDWARE\DAC;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\SD;..\MALLOC;..\FATFS;..\FATFS\src;..\FATFS\exfuns;..\HARDWARE\FLASH;..\HARDWARE\SPI;..\USMART;..\HARDWARE\RTC</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -441,6 +441,11 @@
               <FileName>spi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\SPI\spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\RTC\rtc.c</FilePath>
             </File>
           </Files>
         </Group>

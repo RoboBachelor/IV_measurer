@@ -112,7 +112,7 @@ static void ADC1_Init(void)
 	ADC_InitStructure.ADC_NbrOfChannel=2;		//??????
 	ADC_Init(ADC1,&ADC_InitStructure);
 	
-	ADC_RegularChannelConfig(ADC1,ADC_Channel_2,1,ADC_SampleTime_239Cycles5);
+	ADC_RegularChannelConfig(ADC1,ADC_Channel_0,1,ADC_SampleTime_239Cycles5);
 	ADC_RegularChannelConfig(ADC1,ADC_Channel_1,2,ADC_SampleTime_239Cycles5);
 	
 	ADC_DMACmd(ADC1,ENABLE);	//?DMA????
@@ -183,10 +183,11 @@ void ADC1_Config(){
 
 /* --- ADC DMA Buffer Handler --- */
 
- uint16_t dist_cnt, dist_len;
- uint16_t source_cur_index, stride;
- uint16_t *volt_addr, *curr_addr;
- volatile uint8_t copy_flag;
+static uint16_t dist_cnt, dist_len;
+static uint16_t source_cur_index, stride;
+static uint16_t *volt_addr, *curr_addr;
+static volatile uint8_t copy_flag;
+static uint32_t debug_adc1_dma_it_tc_cnt = 0;
 
 void Copy_ADC_Buf(uint16_t *volt_dist, uint16_t* curr_dist, uint16_t dist_length, uint16_t s){
 	
@@ -253,7 +254,6 @@ static void Copy_ADC_Buf_ISR(uint8_t HT){
 
 }
 
-uint32_t adc1_dma_it_tc_cnt = 0;
 
 void DMA1_Channel1_IRQHandler(void)
 {
@@ -268,7 +268,7 @@ void DMA1_Channel1_IRQHandler(void)
     {
         DMA_ClearITPendingBit(DMA1_FLAG_TC1);
 				Copy_ADC_Buf_ISR(0);
-				++adc1_dma_it_tc_cnt;
+				++debug_adc1_dma_it_tc_cnt;
 			//memcpy(WriteBuff+ADC_BUFF_LEN/2, ADC_ConvertedValue+ADC_BUFF_LEN/2, ADC_BUFF_LEN*sizeof(uint16_t)/2);
     }
 }

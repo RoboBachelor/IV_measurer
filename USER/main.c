@@ -13,7 +13,8 @@
 #include "ff.h"
 #include "exfuns.h"
 #include "string.h"
-#define max_storage		400
+#include "rtc.h"
+
 #define PLOT_ORIG_X		40
 #define PLOT_ORIG_Y		300
 #define PLOT_WIDTH		400.0f
@@ -43,18 +44,18 @@ float	vol_normal	= (3.3 / 4096.0) * 10.5;
 float	cur_normal	= (3.3 / 4096.0) / 50.0 / 0.008;//(3.3 / 4096.0) / 50.0 / 0.008
 float	cap_normal	= (3.3 / 4096.0) * 21.0;
 
-//float	v_record[max_storage] = { 0.0 };        /* 存储记录的电压值 */
-//float	i_record[max_storage] = { 0.0 };        /* 存储记录的电流值 */
-
 u32 delay_cal=1;
 
 u8 test_mode=1;//0 固定时间延迟 1 模式1
 float Vol_Step_Times_Cap_Val=Vol_Step*Cap_Val;
 
+/*** Config measurtimg time here. ***/
+/*** Total measuring time = 42us * RECORD_LEN (max: 800) * RECORD_STRIDE (range: 1 - 50X) ***/
 #define RECORD_LEN 800
+#define RECORD_STRIDE 16
+
 uint16_t voltage_rec[RECORD_LEN];
 uint16_t current_rec[RECORD_LEN];
-
 
 void plot_dot( float x, float y )
 {
@@ -161,7 +162,7 @@ void start_measure( void )
 	
 	EnableOut = 1;
 	
-	Copy_ADC_Buf(voltage_rec, current_rec, RECORD_LEN, 16);
+	Copy_ADC_Buf(voltage_rec, current_rec, RECORD_LEN, RECORD_STRIDE);
 
 	LCD_ShowString( 10, 30, 200, 16, 16, "Mear Finshed, start dis..." );
 	EnableOut	= 0;
@@ -207,7 +208,7 @@ void start_measure( void )
 	{
 		
 		float current_tmp_new = current_rec[i] * cur_normal;
-		float voltage_tmp_new = voltage_rec[i] * cap_normal - current_tmp * sampling_resistor;
+		float voltage_tmp_new = voltage_rec[i] * cap_normal - current_tmp_new * sampling_resistor;
 		float power_tmp_new = current_tmp_new * voltage_tmp_new;
 		
 		POINT_COLOR = RED;
@@ -287,20 +288,18 @@ void monitor_task()
 FIL	fil;
 FRESULT res;
 UINT	bww;
-char	buf[100];
+char fname_str[50];
 
 void save_SD( void )
 {
 	u8	num	= 0;
 	u16	i	= 0;
 	u8	res	= 0;
-	u8	buf_str[50];                            /* 存放字符串 */
+	char buf_str[50];                            /* 存放字符串 */
 	u8	s_buf[50];                              /* 存放字符串 */
 	u32	total, free;
 	u8	t	= 0;
 	u16	count	= 0;
-
-	char str3[] = { "0" };
 
 	exfuns_init();                                  /* 为fatfs相关变量申请内存 */
 	mem_init();                                     /* 初始化内存池 */
@@ -318,30 +317,24 @@ void save_SD( void )
 		SD_successed = 0;
 	}
 
-	do
+	sprintf(fname_str, "0:/%04d%02d%02d_%02d%02d%02d.csv", calendar.w_year, calendar.w_month, calendar.w_date, calendar.hour, calendar.min, calendar.sec);
+	
+	res = f_open( &fil, fname_str, FA_OPEN_ALWAYS | FA_WRITE );
+	f_lseek( &fil, f_size( &fil ) );
+	
+	
+	sprintf( (char *) buf_str, "Vol_cap, Curent\n");
+	f_write( &fil, buf_str, strlen( buf_str ), &bww );
+	
+	for ( i = 0; i < RECORD_LEN; i++ )
 	{
-		count += 1;
-		sprintf( (char *) str3, "0:/%d.txt\0", count );                         /* 产生"123" */
-		res = f_open( &fil, str3, FA_READ );
-	}
-	while ( res == 0 );
-
-	sprintf( (char *) str3, "0:/%d.txt\0", count );                                 /* 产生"123" */
-/********************start*************************/
-	for ( i = 0; i < max_storage; i++ )
-	{
-		//sprintf( (char *) buf_str, "V:%f I:%f\r\n", v_record[i], i_record[i] ); /* 将所需要保存的内容打印到数组 */
-
-		res = f_open( &fil, str3, FA_OPEN_ALWAYS | FA_WRITE );
-
-		f_lseek( &fil, f_size( &fil ) );
-
+		float current_tmp = current_rec[i] * cur_normal;
+		float voltage_tmp = voltage_rec[i] * cap_normal - current_tmp * sampling_resistor;
+		
+		sprintf( (char *) buf_str, "%f, %f\n", voltage_tmp, current_tmp ); /* 将所需要保存的内容打印到数组 */
 		f_write( &fil, buf_str, strlen( buf_str ), &bww );
-
-		f_close( &fil );
 	}
-	//Adc_Init(); /* ADC初始化 */
-/********************start*************************/
+	f_close( &fil );
 }
 
 uint32_t cnt = 0;
@@ -362,7 +355,8 @@ int main( void )
 	delay_ms( 10 );
 	dis_initial_info();
   SW_Init();
-
+	RTC_Init();
+	
 	NVIC_PriorityGroupConfig( NVIC_PriorityGroup_2 );       /* 设置中断优先级分组2 */
 	//exfuns_init();                                          /* 为fatfs相关变量申请内存 */
 	usmart_dev.init( 72 );
@@ -384,7 +378,6 @@ int main( void )
 		/* LCD_ShowString(10,10,200,16,16,"Fatfs Error!"); */
 	//}
 	dis_initial_info();
- 
 	
 	while ( 1 )
 	{
@@ -401,7 +394,18 @@ int main( void )
 		}
 		case KEY1_PRES:
 		{
-			LCD_Clear( WHITE );
+			while(1){
+				start_measure();
+				save_SD();
+				uint8_t waiting_time = 58;
+				while(waiting_time) {
+					char lcd_str[30];
+					sprintf(lcd_str, "Waiting for next measure: %02d", waiting_time);
+					LCD_ShowString( 10, 10, 400, 16, 16, lcd_str);
+					delay_ms(1000);
+					-- waiting_time;
+				}
+			}
 			continue;
 		}
 		case WKUP_PRES:
@@ -409,6 +413,7 @@ int main( void )
 			LCD_ShowString( 10, 50, 200, 24, 24, "SD Runing ^_^" );
 			save_SD();
 			LCD_ShowString( 10, 50, 200, 24, 24, "SD END ^_^" );
+			LCD_ShowString( 10, 70, 300, 24, 24, fname_str);
 		}
 		}
 		EnableOut	= 0;
