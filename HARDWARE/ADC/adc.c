@@ -57,7 +57,8 @@ void  Adc_Init(void)
 	ADC_InitStructure.ADC_NbrOfChannel = 1;	//顺序进行规则转换的ADC通道的数目
 	ADC_Init(ADC1, &ADC_InitStructure);	//根据ADC_InitStruct中指定的参数初始化外设ADCx的寄存器   
 
-  
+  ADC_TempSensorVrefintCmd(ENABLE); //开启内部温度传感器
+	
 	ADC_Cmd(ADC1, ENABLE);	//使能指定的ADC1
 	
 	ADC_ResetCalibration(ADC1);	//使能复位校准  
@@ -72,16 +73,13 @@ void  Adc_Init(void)
 
 }
 
-
-
 static void ADC1_Init(void)
 {
-    ADC_InitTypeDef ADC_InitStructure;
-		GPIO_InitTypeDef GPIO_InitStructure;
+	ADC_InitTypeDef ADC_InitStructure;
+	GPIO_InitTypeDef GPIO_InitStructure;
 
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_ADC1, ENABLE );	  //使能ADC1通道时钟
-
-		RCC_ADCCLKConfig(RCC_PCLK2_Div6);   //设置ADC分频因子6 72M/6=12,ADC最大时间不能超过14M
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_ADC1, ENABLE );	  //使能ADC1通道时钟
+	RCC_ADCCLKConfig(RCC_PCLK2_Div6);   //设置ADC分频因子6 72M/6=12,ADC最大时间不能超过14M
 
 	//PA0 作为模拟通道输入引脚                         
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
@@ -112,8 +110,10 @@ static void ADC1_Init(void)
 	ADC_InitStructure.ADC_NbrOfChannel=2;		//??????
 	ADC_Init(ADC1,&ADC_InitStructure);
 	
-	ADC_RegularChannelConfig(ADC1,ADC_Channel_0,1,ADC_SampleTime_239Cycles5);
+	ADC_RegularChannelConfig(ADC1,ADC_Channel_2,1,ADC_SampleTime_239Cycles5);
 	ADC_RegularChannelConfig(ADC1,ADC_Channel_1,2,ADC_SampleTime_239Cycles5);
+	
+	ADC_TempSensorVrefintCmd(ENABLE); //开启内部温度传感器
 	
 	ADC_DMACmd(ADC1,ENABLE);	//?DMA????
 	
@@ -128,8 +128,6 @@ static void ADC1_Init(void)
 	while(ADC_GetCalibrationStatus(ADC1));	//??????
 	
 	ADC_SoftwareStartConvCmd(ADC1,ENABLE);	//????ADC??
- 
-	
 }
 
 #define ADC1_DR_Address ((u32)0x40012400+0X4C)
@@ -190,10 +188,8 @@ static volatile uint8_t copy_flag;
 static uint32_t debug_adc1_dma_it_tc_cnt = 0;
 
 void Copy_ADC_Buf(uint16_t *volt_dist, uint16_t* curr_dist, uint16_t dist_length, uint16_t s){
-	
 	/* Check */
-	
-		
+
 	/* Reset DMA */
 	
 	ADC_SoftwareStartConvCmd(ADC1, DISABLE);
@@ -287,9 +283,16 @@ u16 Get_Adc(u8 ch)
 	return ADC_GetConversionValue(ADC1);	//返回最近一次ADC1规则组的转换结果
 }
 
+/*********************************************************************************************************
+** Function name:           Get_Adc_Average
+** Descriptions:            获取通道ch的转换值，取times次采样值,然后平均
+** input parameters:        ch：通道
+                            times：采样次数
+** Returned value:          times次采样平均值
+*********************************************************************************************************/ 
 u16 Get_Adc_Average(u8 ch,u8 times)
 {
-	u32 temp_val=0;
+	u16 temp_val=0;
 	u8 t;
 	for(t=0;t<times;t++)
 	{
@@ -299,7 +302,32 @@ u16 Get_Adc_Average(u8 ch,u8 times)
 	
 } 	 
 
-
+u16 T_Get_Adc_Average(u8 ch,u8 times)
+{
+	u32 temp_val=0;
+	u8 t;
+	for(t=0;t<times;t++)
+	{
+	temp_val+=Get_Adc(ch);
+	delay_ms(1);
+	}
+	return temp_val/times;
+} 	    
+/*********************************************************************************************************
+** Function name:           Get_Temprate
+** Descriptions:            获取STM32内部温度传感器的值
+** input parameters:        none
+** Returned value:          温度值(扩大了100倍,单位:℃.)
+*********************************************************************************************************/
+float Get_Temprate(void)	//获取内部温度传感器的温度值
+{
+	u32 adcx; 
+	float temperate;
+	adcx=T_Get_Adc_Average(ADC_Channel_16,16);	//通道16，读取5次
+	temperate=(float)adcx*(3.3/4096);		//得到的电压值。 
+	temperate=(1.43-temperate)/0.0043+25;	//转换为温度值 
+	return temperate;
+} 
 
 
 

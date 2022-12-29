@@ -22,5 +22,5 @@ void Copy_ADC_Buf(uint16_t *volt_dist, uint16_t* curr_dist, uint16_t dist_length
 void Adc_Init(void);
 u16  Get_Adc(u8 ch); 
 u16 Get_Adc_Average(u8 ch,u8 times); 
- 
+float Get_Temprate(void);    //获取内部温度传感器温度值 
 #endif 

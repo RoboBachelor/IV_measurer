@@ -217,9 +217,9 @@ u32 SD_GetSectorCount(void)
 //初始化SD卡
 u8 SD_Initialize(void)
 {
-    u8 r1;      // 存放SD卡的返回值
-    u16 retry;  // 用来进行超时计数
-    u8 buf[4];  
+	u8 r1;      // 存放SD卡的返回值
+	u16 retry;  // 用来进行超时计数
+	u8 buf[4];  
 	u16 i;
 
 	SD_SPI_Init();		//初始化IO

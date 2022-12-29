@@ -13,15 +13,13 @@
 //Copyright(C) 广州市星翼电子科技有限公司 2009-2019
 //All rights reserved									  
 ////////////////////////////////////////////////////////////////////////////////// 
-#define LED0 PCout(11)	// PC11
-#define LED1 PCout(12)	// PC12	
+#define LED0 PCout(11)	// PC11 红 (新版PCB取消了)
+#define LED1 PCout(12)	// PC12	绿
 #define SW1 PCout(5)	// PC5
 #define SW2 PAout(15)	// PA15
 #define EnableOut PCout(2) // PC2
 
 void LED_Init(void);//初始化
 void SW_Init(void);//初始化
-
-
-		 				    
+	 				    
 #endif

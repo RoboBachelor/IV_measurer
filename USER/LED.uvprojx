@@ -137,7 +137,7 @@
             <DriverSelection>4100</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
-          <Flash2>Segger\JL2CM3.dll</Flash2>
+          <Flash2>BIN\UL2CM3.DLL</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\HARDWARE\LED;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\STM32F10x_FWLib\inc;..\CORE;..\HARDWARE\ADC;..\HARDWARE\ADC;..\HARDWARE\DAC;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\SD;..\MALLOC;..\FATFS;..\FATFS\src;..\FATFS\exfuns;..\HARDWARE\FLASH;..\HARDWARE\SPI;..\USMART;..\HARDWARE\RTC</IncludePath>
+              <IncludePath>..\HARDWARE\LED;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\STM32F10x_FWLib\inc;..\CORE;..\HARDWARE\ADC;..\HARDWARE\ADC;..\HARDWARE\DAC;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\SD;..\MALLOC;..\FATFS;..\FATFS\src;..\FATFS\exfuns;..\HARDWARE\FLASH;..\HARDWARE\SPI;..\USMART;..\HARDWARE\RTC;..\HARDWARE\CAN;..\HARDWARE\TIMER</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -446,6 +446,16 @@
               <FileName>rtc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\RTC\rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\CAN\can.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\TIMER\timer.c</FilePath>
             </File>
           </Files>
         </Group>
